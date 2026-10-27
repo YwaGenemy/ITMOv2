@@ -14,8 +14,10 @@ from app.review import handle_review
     b'{"diff": false}', b'{"diff": []}', b'{"diff": {}}',
     b'{"diff": ""}',
 ])
-def test_invalid_request_is_rejected_without_llm_call(body):
-    llm = FakeLLM()
+@pytest.mark.parametrize('mode', ['ok', 'slow', 'fail'])
+def test_invalid_request_is_rejected_without_llm_call(body, mode):
+    llm = FakeLLM(delay_s=1.0 if mode == 'slow' else 0,
+                  error=RuntimeError('private exception marker') if mode == 'fail' else None)
 
     status, payload = handle_review(body, llm)
 
@@ -28,10 +30,13 @@ def test_invalid_request_is_rejected_without_llm_call(body):
     assert llm.calls == []
 
 
-@pytest.mark.parametrize("character", ["a", "😀"])
-def test_20001_code_points_are_rejected_without_llm_call(character):
-    llm = FakeLLM()
-    body = json.dumps({"diff": character * 20001}).encode()
+@pytest.mark.parametrize("character", ["a", "я", "😀"])
+@pytest.mark.parametrize('ensure_ascii', [True, False])
+@pytest.mark.parametrize('mode', ['ok', 'slow', 'fail'])
+def test_20001_code_points_are_rejected_without_llm_call(character, ensure_ascii, mode):
+    llm = FakeLLM(delay_s=1.0 if mode == 'slow' else 0,
+                  error=RuntimeError('private exception marker') if mode == 'fail' else None)
+    body = json.dumps({"diff": character * 20001}, ensure_ascii=ensure_ascii).encode()
 
     status, payload = handle_review(body, llm)
 
@@ -44,7 +49,7 @@ def test_20001_code_points_are_rejected_without_llm_call(character):
     assert llm.calls == []
 
 
-@pytest.mark.parametrize("diff", ["a" * 20000, "😀" * 20000, " \n\t "])
+@pytest.mark.parametrize("diff", ["a" * 20000, "я" * 20000, "😀" * 20000, " \n\t "])
 @pytest.mark.parametrize("ensure_ascii", [True, False])
 def test_valid_diff_is_passed_to_llm_once_without_changes(diff, ensure_ascii):
     llm = FakeLLM()
