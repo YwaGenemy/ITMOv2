@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openai/gpt-6.1-sol-fast",
+  "mcp": {
+    "diff-guard": {
+      "type": "local",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "mcp_server.diff_guard"
+      ],
+      "enabled": true
+    }
+  }
+}
