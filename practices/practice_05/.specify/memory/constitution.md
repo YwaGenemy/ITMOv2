@@ -1,50 +1,70 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Отчёт о влиянии изменений (Sync Impact Report)
+Версия: незаполненный шаблон → 1.0.0 (первое принятие конституции).
+Принципы: пять незаполненных разделов заменены на:
+I. Минимальный стек; II. Единственный контракт API; III. TDD и единая проверка;
+IV. Изолированные тесты LLM; V. Минимальные логи.
+Добавлены разделы: Ограничения проекта; Порядок разработки; правила Governance.
+Удалённые разделы: нет.
+Отложенные TODO: нет.
+Временный отчёт для проверки человеком; удалить перед коммитом конституции.
+-->
+# AI-помощник ревьюера Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Минимальный стек
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+В `app/` разрешена только стандартная библиотека Python. UI создаётся на чистых
+HTML и JavaScript без фреймворков. Это сохраняет простой и воспроизводимый стек.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Единственный контракт API
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Единственный источник контракта API — `docs/requirements.md`. Изменять контракт
+разрешено только по явному решению человека; реализация и спецификации обязаны ему
+соответствовать.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. TDD и единая проверка
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Новое поведение реализуется через TDD: сначала тест и подтверждённое падение,
+затем минимальная реализация и рефакторинг при зелёных тестах. Единственная команда
+проверки — `sh scripts/check.sh`. Ошибки проверки необходимо исправлять;
+ослаблять проверку или удалять тесты ради успешного результата запрещено.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Изолированные тесты LLM
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+В тестах разрешён только `FakeLLM` из `app/llm.py`. Сеть и реальные провайдеры LLM
+в тестах запрещены, чтобы результаты были воспроизводимыми и независимыми от сервиса.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Минимальные логи
+
+Логи содержат только `request_id`, `duration_ms`, `status`. Diff, ответы LLM,
+тексты исключений и любые другие поля в логах запрещены. Этих трёх полей достаточно
+для связи запроса с его длительностью и результатом без раскрытия содержимого.
+
+## Ограничения проекта
+
+Правила кода определены в `docs/style-guide.md`, инструкции работы — в `AGENTS.md`.
+Они применяются вместе с конституцией; контракт API определяется исключительно
+`docs/requirements.md`. Проектные инструкции и пояснения пишутся кратко на русском.
+
+## Порядок разработки
+
+Перед реализацией необходимо сверить поведение с контрактом и написать падающий тест.
+Поведение логики проверяется через публичный `handle_review` с `FakeLLM`.
+После изменений выполняется `sh scripts/check.sh`; при FAIL работа не считается
+завершённой. Каждое ревью проверяет соблюдение пяти принципов конституции.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Конституция обязательна для спецификаций, реализации и ревью. Поправки требуют
+явного решения человека, описания причины, оценки влияния и обновления версии
+и даты изменения. Поправка к конституции сама по себе не изменяет контракт API:
+для изменения `docs/requirements.md` требуется отдельное явное решение человека.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Версии следуют SemVer: MAJOR — несовместимое удаление или переопределение правил;
+MINOR — новый принцип, раздел или существенное расширение правил;
+PATCH — уточнение формулировок без изменения смысла. Перед завершением работы
+проверяются соответствие конституции и результат единой команды проверки.
+
+**Version**: 1.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-27
