@@ -1,0 +1,147 @@
+
+> build · gpt-6.1-sol-fast
+
+→ Skill "test-driven-development"
+→ Read .
+✱ Glob "extensions.yml" in .specify · 0 matches
+→ Read docs/style-guide.md
+
+$ git status --short
+?? evidence/05-logic-plan.txt
+?? evidence/06-logic-tasks.txt
+?? evidence/07-logic-implement.txt
+?? specs/002-review-api-deadline/contracts/
+?? specs/002-review-api-deadline/data-model.md
+?? specs/002-review-api-deadline/plan.md
+?? specs/002-review-api-deadline/quickstart.md
+?? specs/002-review-api-deadline/research.md
+?? specs/002-review-api-deadline/tasks.md
+
+$ .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+{"FEATURE_DIR":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline","AVAILABLE_DOCS":["research.md","data-model.md","contracts/","quickstart.md","tasks.md"]}
+
+✱ Glob "checklists/*" in specs/002-review-api-deadline · 1 match
+→ Read specs/002-review-api-deadline/checklists/requirements.md
+| Checklist | Total | Checked | Unchecked | Status |
+|-----------|-------|---------|-----------|--------|
+| requirements.md | 16 | 16 | 0 | ✓ PASS |
+
+Начинаю реализацию `002-review-api-deadline` по TDD: сначала проверю контекст и задачи, затем зафиксирую падающие тесты и внесу код.
+
+# Todos
+[•] Изучить спецификацию, задачи и настройки проекта
+[ ] Выполнить задачи фичи циклами RED → GREEN с отметками в tasks.md
+[ ] Выполнить итоговую проверку и проверить post-hooks
+
+→ Read docs/requirements.md
+→ Read specs/002-review-api-deadline/tasks.md
+→ Read specs/002-review-api-deadline/plan.md
+→ Read specs/002-review-api-deadline/spec.md
+→ Read .specify/memory/constitution.md
+→ Read .opencode/skills/test-driven-development/writing-good-tests.md
+→ Read app/llm.py
+→ Read app/server.py
+→ Read tests/test_validation.py
+→ Read app/review.py
+→ Read specs/contract.md
+→ Read specs/002-review-api-deadline/research.md
+→ Read specs/002-review-api-deadline/data-model.md
+→ Read specs/002-review-api-deadline/quickstart.md
+→ Read specs/002-review-api-deadline/contracts/http.md
+→ Read specs/002-review-api-deadline/contracts/cli.md
+
+$ git rev-parse --git-dir
+/home/ywa/itmo/AI/ITMOv2/.git
+
+$ sh scripts/check.sh
+...................................                                      [100%]
+35 passed in 0.04s
+
+✱ Glob "**/{.gitignore,Dockerfile*,.eslintrc*,eslint.config.*,.prettierrc*,package.json,.npmrc,*.tf,Chart.yaml,index.html}" in . · 1 match
+→ Read /home/ywa/itmo/AI/ITMOv2/.gitignore
+✗ Patch failed
+Error: apply_patch verification failed: Error: Failed to find expected lines in /home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline/tasks.md:
+- [ ] T001
+% Patch 3 files
+% Patch 1 file
+Исходная проверка: **35 passed**. Тесты подтвердили два пробела: вызов ждал всю задержку LLM, а прямые вызовы не создавали итоговый лог. После реализации ограниченного ожидания и общей финализации: **39 passed** (T001–T008). Перехожу к HTTP-стыку, выдаче HTML и CLI.
+
+# Todos
+[✓] Изучить спецификацию, задачи и настройки проекта
+[•] Выполнить задачи фичи циклами RED → GREEN с отметками в tasks.md
+[ ] Выполнить итоговую проверку и проверить post-hooks
+
+% Patch 1 file
+% Patch 1 file
+% Patch 2 files
+% Patch 1 file
+% Patch 2 files
+% Patch 2 files
+% Patch 2 files
+HTTP и CLI готовы (T009–T019): POST использует адаптер своего сервера и фиксированный лимит 10 с, GET выдаёт HTML, режимы `ok/slow/fail` запускаются через argparse. Подтверждены RED → GREEN для HTTP, CLI и раннего сбоя LLM; текущий результат — **57 passed**. Поздний сбой сохраняет 504 и не создаёт второй лог.
+% Patch 1 file
+% Patch 3 files
+% Patch 1 file
+% Patch 1 file
+Регрессия входной валидации и Unicode-границ проходит без изменений логики (T020–T023). Тесты разрыва соединения сначала упали на `BrokenPipeError`/`ConnectionResetError`; после узкой обработки этих ошибок — **119 passed** (T024–T025). Осталась итоговая сверка и запуск трёх демо, включая реальное ожидание 10 секунд.
+% Patch 1 file
+
+$ .venv/bin/python /tmp/opencode/review_deadline_demo.py
+ok: GET 200, POST 200, elapsed=0.004s
+ok: exactly one metadata log; process stopped
+fail: GET 200, POST 502, elapsed=0.002s
+fail: exactly one metadata log; process stopped
+slow: concurrent GET 0.001s
+slow: GET 200, POST 504, elapsed=10.002s
+slow: exactly one metadata log; process stopped
+
+% Patch 2 files
+
+# Todos
+[✓] Изучить спецификацию, задачи и настройки проекта
+[✓] Выполнить задачи фичи циклами RED → GREEN с отметками в tasks.md
+[•] Выполнить итоговую проверку и проверить post-hooks
+
+% Patch 1 file
+✱ Glob "extensions.yml" in .specify · 0 matches
+✱ Grep "^- \[ \] T" in specs/002-review-api-deadline/tasks.md · 0 matches
+
+$ git status --short
+M app/review.py
+ M app/server.py
+ M tests/test_validation.py
+?? app/static/
+?? evidence/05-logic-plan.txt
+?? evidence/06-logic-tasks.txt
+?? evidence/07-logic-implement.txt
+?? specs/002-review-api-deadline/contracts/
+?? specs/002-review-api-deadline/data-model.md
+?? specs/002-review-api-deadline/plan.md
+?? specs/002-review-api-deadline/quickstart.md
+?? specs/002-review-api-deadline/research.md
+?? specs/002-review-api-deadline/tasks.md
+?? tests/test_review_deadline.py
+?? tests/test_server.py
+
+# Todos
+[✓] Изучить спецификацию, задачи и настройки проекта
+[✓] Выполнить задачи фичи циклами RED → GREEN с отметками в tasks.md
+[✓] Выполнить итоговую проверку и проверить post-hooks
+
+Фича **`002-review-api-deadline` реализована по TDD**. Все задачи T001–T028 отмечены `[X]` в `specs/002-review-api-deadline/tasks.md`.
+
+Что готово:
+- Ограниченное ожидание LLM: **504 `llm_timeout`**, без ожидания позднего завершения.
+- Безопасный **502 `llm_failed`**, без диагностики исключения.
+- Серверный UUID и ровно один лог с `request_id`, `duration_ms`, `status`.
+- Сохранена входная валидация и Unicode-границы.
+- HTTP с адаптером на экземпляр сервера, `GET /` и CLI-режимы `ok/slow/fail`.
+- Обработка ожидаемого разрыва соединения при отправке ответа.
+
+**Проверка:** `sh scripts/check.sh` — **119 passed**. Падающие тесты подтверждены до соответствующих изменений кода.
+
+Реальные демо: `ok` → 200, `fail` → 502, `slow` → 504 за **10,002 с**. Во время ожидания GET доступен; после позднего завершения второго лога нет. Процессы остановлены.
+
+Результаты записаны в `specs/002-review-api-deadline/quickstart.md`. HTML пока заглушка; клиентские 15 секунд и браузерная UI-приёмка ожидают готового интерфейса.
+
+`.specify/extensions.yml` отсутствует. Git commit не выполнялся.

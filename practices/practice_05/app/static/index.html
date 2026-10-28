@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ревью изменений</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f4f6fa; color: #182338; font: 1rem/1.6 system-ui, sans-serif; }
+  main { max-width: 56rem; margin: 2rem auto; padding: 1.5rem; }
+  h1 { line-height: 1.2; }
+  form, #result { padding: 1.5rem; background: white; border: 1px solid #c4cddd; border-radius: .75rem; }
+  label { display: block; font-weight: 700; }
+  #hint { margin-top: .25rem; color: #46536b; }
+  textarea { width: 100%; min-height: 15rem; padding: .75rem; resize: vertical; font: .95rem/1.5 monospace; border: 1px solid #69768c; border-radius: .3rem; }
+  button { margin-top: 1rem; padding: .7rem 1.3rem; border: 0; border-radius: .3rem; background: #2456b5; color: white; font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid #995500; outline-offset: 3px; }
+  :disabled { cursor: wait; opacity: .7; }
+  #status { min-height: 1.6em; }
+  #error { color: #9d1b27; overflow-wrap: anywhere; white-space: pre-wrap; }
+  #result { overflow-wrap: anywhere; }
+  #result p { white-space: pre-wrap; }
+  #result li { margin-bottom: 1rem; }
+  pre { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #f4f6fa; padding: .75rem; }
+  @media (max-width: 36rem) { main { margin: 0; padding: 1rem; } form, #result { padding: 1rem; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Ревью изменений</h1>
+<form id="review-form" novalidate autocomplete="off">
+  <label for="diff">Diff</label>
+  <p id="hint">Вставьте diff одного PR</p>
+  <textarea id="diff" name="diff" aria-describedby="hint" spellcheck="false"></textarea>
+  <button id="submit" type="submit">Проверить</button>
+</form>
+<p id="status" role="status" aria-atomic="true"></p>
+<div id="error" role="alert" aria-atomic="true"></div>
+<section id="result" aria-label="Результат ревью" hidden></section>
+</main>
+<script id="review-logic">
+"use strict";
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validReview(value) {
+  return isObject(value) && typeof value.summary === 'string' &&
+    typeof value.request_id === 'string' && Array.isArray(value.risks) &&
+    value.risks.length <= 3 && value.risks.every(item =>
+      isObject(item) && typeof item.file === 'string' &&
+      Number.isInteger(item.line) && item.line >= 1 &&
+      typeof item.evidence === 'string' && typeof item.risk === 'string') &&
+    Array.isArray(value.checks) && value.checks.every(item => typeof item === 'string');
+}
+
+function classifyResponse(status, body) {
+  let value;
+  try {
+    value = JSON.parse(body);
+  } catch {
+    return {message: 'Сервис недоступен'};
+  }
+  const request_id = isObject(value) && typeof value.request_id === 'string'
+    ? value.request_id : undefined;
+  if (status === 200 && validReview(value)) return {result: value};
+  if (status === 200) return {message: 'Некорректный ответ сервиса', request_id};
+  const errors = [
+    [422, 'invalid_request', 'Не удалось проверить diff. Проверьте введённые изменения и повторите попытку'],
+    [413, 'diff_too_large', 'Diff слишком большой. Максимум — 20 000 символов. Уменьшите diff и повторите попытку'],
+    [504, 'llm_timeout', 'Проверка заняла слишком много времени. Повторите попытку'],
+    [502, 'llm_failed', 'Не удалось выполнить проверку. Повторите попытку позже'],
+  ];
+  const code = isObject(value) && isObject(value.error) && typeof value.error.code === 'string'
+    ? value.error.code : undefined;
+  const match = errors.find(([http, name]) => http === status && name === code);
+  return {message: match ? match[2] : 'Сервис недоступен', request_id};
+}
+</script>
+<script>
+"use strict";
+
+const form = document.getElementById('review-form');
+const input = document.getElementById('diff');
+const button = document.getElementById('submit');
+const statusArea = document.getElementById('status');
+const errorArea = document.getElementById('error');
+const resultArea = document.getElementById('result');
+let activeAttempt = null;
+
+function textElement(tag, text) {
+  const element = document.createElement(tag);
+  element.textContent = text;
+  return element;
+}
+
+function prepareResult(review) {
+  const fragment = document.createDocumentFragment();
+  fragment.append(textElement('h2', 'Сводка'), textElement('p', review.summary), textElement('h2', 'Риски'));
+  const risks = document.createElement('ol');
+  for (const risk of review.risks) {
+    const item = document.createElement('li');
+    for (const [label, value, tag] of [
+      ['Файл', risk.file, 'p'], ['Строка', risk.line, 'p'],
+      ['Фрагмент', risk.evidence, 'pre'], ['Риск', risk.risk, 'p'],
+    ]) {
+      item.append(textElement('h3', label), textElement(tag, value));
+    }
+    risks.append(item);
+  }
+  fragment.append(review.risks.length ? risks : textElement('p', 'Риски не найдены'), textElement('h2', 'Проверки'));
+  const checks = document.createElement('ul');
+  for (const check of review.checks) checks.append(textElement('li', check));
+  fragment.append(review.checks.length ? checks : textElement('p', 'Список проверок пуст'));
+  return fragment;
+}
+
+function setLoading(loading) {
+  input.disabled = loading;
+  button.disabled = loading;
+  button.textContent = loading ? 'Проверяем…' : 'Проверить';
+  statusArea.textContent = loading ? 'Проверяем изменения…' : '';
+}
+
+function showError(message, request_id) {
+  resultArea.hidden = true;
+  errorArea.replaceChildren(textElement('p', message));
+  if (request_id !== undefined) errorArea.append(textElement('p', 'request_id: ' + request_id));
+}
+
+function finishAttempt(attempt, outcome, fragment) {
+  if (activeAttempt !== attempt || attempt.settled) return;
+  attempt.settled = true;
+  clearTimeout(attempt.timer);
+  activeAttempt = null;
+  setLoading(false);
+  if (fragment) {
+    resultArea.replaceChildren(fragment);
+    resultArea.hidden = false;
+    statusArea.textContent = 'Проверка завершена';
+  } else {
+    showError(outcome.message, outcome.request_id);
+  }
+}
+
+function timeoutAttempt(attempt) {
+  if (activeAttempt !== attempt || attempt.settled) return;
+  finishAttempt(attempt, {message: 'Сервис не ответил вовремя', request_id: attempt.request_id});
+  attempt.controller.abort();
+}
+
+function canContinue(attempt) {
+  if (activeAttempt !== attempt || attempt.settled) return false;
+  if (performance.now() >= attempt.deadlineAt) {
+    timeoutAttempt(attempt);
+    return false;
+  }
+  return true;
+}
+
+input.addEventListener('input', () => {
+  if (!resultArea.hidden) {
+    resultArea.hidden = true;
+    resultArea.replaceChildren();
+    statusArea.textContent = '';
+  }
+});
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (activeAttempt) return;
+  const diff = input.value;
+  resultArea.hidden = true;
+  resultArea.replaceChildren();
+  errorArea.replaceChildren();
+  statusArea.textContent = '';
+  if (!diff.trim()) {
+    showError('Вставьте diff для проверки');
+    input.focus();
+    return;
+  }
+  const attempt = {
+    token: Symbol('review'), diff, deadlineAt: performance.now() + 15000,
+    controller: new AbortController(), timer: null, settled: false, request_id: undefined,
+  };
+  activeAttempt = attempt;
+  attempt.timer = setTimeout(() => timeoutAttempt(attempt), 15000);
+  setLoading(true);
+  try {
+    const response = await fetch('/api/reviews', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({diff: attempt.diff}),
+      signal: attempt.controller.signal,
+    });
+    if (!canContinue(attempt)) return;
+    const body = await response.text();
+    if (!canContinue(attempt)) return;
+    const outcome = classifyResponse(response.status, body);
+    attempt.request_id = outcome.result ? outcome.result.request_id : outcome.request_id;
+    if (!canContinue(attempt)) return;
+    const fragment = outcome.result ? prepareResult(outcome.result) : null;
+    if (!canContinue(attempt)) return;
+    finishAttempt(attempt, outcome, fragment);
+  } catch {
+    if (canContinue(attempt)) {
+      finishAttempt(attempt, {message: 'Сервис недоступен', request_id: attempt.request_id});
+    }
+  }
+});
+</script>
+</body>
+</html>
