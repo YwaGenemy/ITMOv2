@@ -1,0 +1,91 @@
+
+> build · gpt-6.1-sol-fast
+
+→ Read .
+→ Read .specify
+→ Read .specify/scripts/bash/setup-plan.sh
+
+$ git status --short --branch
+## practice_05
+?? evidence/08-ui-plan.txt
+
+# Todos
+[•] Выполнить setup-plan и прочитать спецификацию, контракт, конституцию и шаблон
+[ ] Исследовать решения и подготовить plan.md и research.md
+[ ] Создать модель данных, UI-контракт и quickstart; проверить gates и hooks
+
+→ Read specs
+→ Read .specify/feature.json
+→ Read docs/style-guide.md
+→ Read .specify/scripts/bash/common.sh
+Подготовлю план и артефакты дизайна для `001-reviewer-web-ui` с учётом общего контракта и готового `GET /`. В плане закреплю один `app/static/index.html` со встроенным JS, без сборки и фреймворков.
+
+$ ls "/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/001-reviewer-web-ui"
+checklists
+spec.md
+
+$ /home/ywa/itmo/AI/ITMOv2/practices/practice_05/.specify/scripts/bash/setup-plan.sh --json
+Copied plan template to /home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/001-reviewer-web-ui/plan.md
+{"FEATURE_SPEC":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/001-reviewer-web-ui/spec.md","IMPL_PLAN":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/001-reviewer-web-ui/plan.md","FEATURE_DIR":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/001-reviewer-web-ui","BRANCH":"001-reviewer-web-ui"}
+
+→ Read specs/contract.md
+→ Read docs/requirements.md
+→ Read app/server.py
+→ Read .specify/memory/constitution.md
+→ Read specs/001-reviewer-web-ui/plan.md
+→ Read specs/001-reviewer-web-ui/spec.md
+→ Read app/static/index.html
+• Исследовать минимальный UI General Agent
+✓ Исследовать минимальный UI General Agent
+→ Read tests
+→ Read pyproject.toml
+→ Read scripts/check.sh
+→ Read app/llm.py
+
+# Todos
+[✓] Выполнить setup-plan и прочитать спецификацию, контракт, конституцию и шаблон
+[•] Исследовать решения и подготовить plan.md и research.md
+[ ] Создать модель данных, UI-контракт и quickstart; проверить gates и hooks
+
+`GET /` уже выдаёт HTML-заглушку, а сервер поддерживает `FakeLLM` для приёмки. В дизайне учту две важные детали контракта: 15 секунд охватывают чтение и обработку ответа, а JSON с неверной схемой при HTTP 200 должен давать ошибку целиком, без частичного результата.
+% Patch 3 files
+
+# Todos
+[✓] Выполнить setup-plan и прочитать спецификацию, контракт, конституцию и шаблон
+[✓] Исследовать решения и подготовить plan.md и research.md
+[•] Создать модель данных, UI-контракт и quickstart; проверить gates и hooks
+
+% Patch 3 files
+→ Read .specify
+→ Read specs/001-reviewer-web-ui/checklists
+✱ Grep "NEEDS CLARIFICATION|\[FEATURE\]|\[DATE\]|\[###" in specs/001-reviewer-web-ui · 2 matches
+
+$ git status --short --branch
+## practice_05
+?? evidence/08-ui-plan.txt
+?? specs/001-reviewer-web-ui/contracts/
+?? specs/001-reviewer-web-ui/data-model.md
+?? specs/001-reviewer-web-ui/plan.md
+?? specs/001-reviewer-web-ui/quickstart.md
+?? specs/001-reviewer-web-ui/research.md
+
+# Todos
+[✓] Выполнить setup-plan и прочитать спецификацию, контракт, конституцию и шаблон
+[✓] Исследовать решения и подготовить plan.md и research.md
+[✓] Создать модель данных, UI-контракт и quickstart; проверить gates и hooks
+
+Планирование `001-reviewer-web-ui` завершено до Phase 1 включительно.
+
+**План:** [specs/001-reviewer-web-ui/plan.md](specs/001-reviewer-web-ui/plan.md)
+
+Созданы артефакты:
+- [research.md](specs/001-reviewer-web-ui/research.md) — технические решения и обоснования.
+- [data-model.md](specs/001-reviewer-web-ui/data-model.md) — данные, состояния и переходы.
+- [contracts/ui.md](specs/001-reviewer-web-ui/contracts/ui.md) — контракт представления.
+- [quickstart.md](specs/001-reviewer-web-ui/quickstart.md) — запуск и сценарии приёмки.
+
+Учтены `specs/contract.md`, готовый `GET /` и ограничение на один HTML-файл со встроенными CSS/JS, без сборки и фреймворков. Проверки конституции пройдены, открытых уточнений нет.
+
+**Ветка Git:** `practice_05`; идентификатор фичи из setup-plan — `001-reviewer-web-ui`.
+
+`.specify/extensions.yml` отсутствует, hooks пропущены по правилам. После правок `sh scripts/check.sh` — **PASS, 119 тестов**. Следующий этап — `/speckit.tasks`.

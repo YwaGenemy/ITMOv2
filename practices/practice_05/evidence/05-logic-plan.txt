@@ -1,0 +1,108 @@
+
+> build · gpt-6.1-sol-fast
+
+✱ Glob "**/.specify/scripts/bash/setup-plan.sh" in /home/ywa/itmo/AI/ITMOv2 · 1 match
+→ Read .specify
+Подготовлю план и артефакты проектирования для `002-review-api-deadline`, учитывая общий контракт, решение D1 и режимы демо-сервера `ok|slow|fail`.
+
+# Todos
+[•] Запустить setup-plan и изучить спецификацию, конституцию и общий контракт
+[ ] Провести исследования и подготовить research.md
+[ ] Заполнить plan.md, модель данных, контракты и quickstart; проверить gates и hooks
+
+→ Read .specify/scripts/bash/setup-plan.sh
+
+$ ls "/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs"
+001-reviewer-web-ui
+002-review-api-deadline
+contract.md
+
+$ /home/ywa/itmo/AI/ITMOv2/practices/practice_05/.specify/scripts/bash/setup-plan.sh --json
+Copied plan template to /home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline/plan.md
+{"FEATURE_SPEC":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline/spec.md","IMPL_PLAN":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline/plan.md","FEATURE_DIR":"/home/ywa/itmo/AI/ITMOv2/practices/practice_05/specs/002-review-api-deadline","BRANCH":"002-review-api-deadline"}
+
+→ Read specs/contract.md
+→ Read docs/style-guide.md
+→ Read docs/requirements.md
+→ Read .specify/memory/constitution.md
+→ Read specs/002-review-api-deadline/plan.md
+→ Read specs/002-review-api-deadline/spec.md
+→ Read app/review.py
+→ Read tests/test_example.py
+→ Read app/llm.py
+→ Read app/server.py
+→ Read scripts/check.sh
+✱ Glob "**/AGENTS.md" in specs · 0 matches
+
+$ git status --short --branch
+## practice_05
+?? evidence/05-logic-plan.txt
+?? specs/002-review-api-deadline/plan.md
+
+# Todos
+[✓] Запустить setup-plan и изучить спецификацию, конституцию и общий контракт
+[•] Провести исследования и подготовить research.md
+[ ] Заполнить plan.md, модель данных, контракты и quickstart; проверить gates и hooks
+
+• Исследовать ограничение ожидания LLM General Agent
+• Исследовать HTTP и демо CLI General Agent
+→ Read app
+
+$ python --version
+Python 3.14.6
+
+✓ Исследовать ограничение ожидания LLM General Agent
+✓ Исследовать HTTP и демо CLI General Agent
+Предварительная проверка конституции пройдена: достаточно стандартной библиотеки и существующего `FakeLLM`. Для deadline выбран daemon-поток с очередью результата: он позволяет вернуть 504, не дожидаясь завершения LLM. Логирование будет единым в `handle_review`, чтобы проверять все исходы через публичную функцию.
+
+`setup-plan` вернул идентификатор `002-review-api-deadline`; текущая Git-ветка — `practice_05`. Это различие зафиксирую в плане.
+
+$ sh scripts/check.sh
+...................................                                      [100%]
+35 passed in 0.04s
+
+✱ Glob "tests/*" in . · 4 matches
+% Patch 1 file
+
+# Todos
+[✓] Запустить setup-plan и изучить спецификацию, конституцию и общий контракт
+[✓] Провести исследования и подготовить research.md
+[•] Заполнить plan.md, модель данных, контракты и quickstart; проверить gates и hooks
+
+% Patch 6 files
+✱ Glob "extensions.yml" in .specify · 0 matches
+
+$ git status --short --branch
+## practice_05
+?? evidence/05-logic-plan.txt
+?? specs/002-review-api-deadline/contracts/
+?? specs/002-review-api-deadline/data-model.md
+?? specs/002-review-api-deadline/plan.md
+?? specs/002-review-api-deadline/quickstart.md
+?? specs/002-review-api-deadline/research.md
+
+✱ Glob "**/*" in specs/002-review-api-deadline · 8 matches
+
+# Todos
+[✓] Запустить setup-plan и изучить спецификацию, конституцию и общий контракт
+[✓] Провести исследования и подготовить research.md
+[✓] Заполнить plan.md, модель данных, контракты и quickstart; проверить gates и hooks
+
+Планирование `002-review-api-deadline` завершено до Phase 1.
+
+**План:** [specs/002-review-api-deadline/plan.md](specs/002-review-api-deadline/plan.md)
+
+Созданы артефакты:
+- [research.md](specs/002-review-api-deadline/research.md) — технические решения и альтернативы;
+- [data-model.md](specs/002-review-api-deadline/data-model.md) — данные, валидация и переходы обработки;
+- [contracts/http.md](specs/002-review-api-deadline/contracts/http.md) — GET, POST и публичная функция;
+- [contracts/cli.md](specs/002-review-api-deadline/contracts/cli.md) — запуск и режимы `ok|slow|fail`;
+- [quickstart.md](specs/002-review-api-deadline/quickstart.md) — сценарии проверки и демонстрации.
+
+Учтены `specs/contract.md`, выдача HTML-заглушки по D1, серверный deadline 10 секунд и безопасные ошибки 502/504. Проверки конституции пройдены, открытых уточнений нет.
+
+**Ветка:** setup вернул `002-review-api-deadline`; фактическая Git-ветка — `practice_05`.  
+**Проверка:** `sh scripts/check.sh` — **35 passed**.  
+`.specify/extensions.yml` отсутствует; extension hooks не зарегистрированы.
+
+Следующий этап — `/speckit.tasks`.
